@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.database import SessionLocal
@@ -37,3 +37,15 @@ def create_asset(asset: AssetCreate, db: Session = Depends(get_db)):
 @router.get("/", response_model=list[AssetResponse])
 def get_assets(db: Session = Depends(get_db)):
     return db.query(Asset).all()
+
+@router.get("/{asset_id}", response_model=AssetResponse)
+def get_asset(asset_id: int, db: Session = Depends(get_db)):
+    asset = db.query(Asset).filter(Asset.id == asset_id).first()
+
+    if not asset:
+        raise HTTPException(
+            status_code=404,
+            detail="Asset not found"
+        )
+
+    return asset
