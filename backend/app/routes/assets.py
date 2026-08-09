@@ -33,3 +33,7 @@ def create_asset(asset: AssetCreate, db: Session = Depends(get_db)):
     db.refresh(new_asset)
 
     return new_asset
+
+@router.get("/", response_model=list[AssetResponse])
+def get_assets(db: Session = Depends(get_db)):
+    return db.query(Asset).all()
