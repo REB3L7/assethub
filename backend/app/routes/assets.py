@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database.database import SessionLocal
 from app.models.asset import Asset
+from app.models.user import User
 from app.schemas.asset import AssetCreate, AssetResponse, AssetUpdate
 
 router = APIRouter(
@@ -89,3 +90,33 @@ def delete_asset(asset_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Asset deleted successfully"}
+
+@router.post("/{asset_id}/assign/{user_id}", response_model=AssetResponse)
+def assign_asset(
+    asset_id: int,
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    asset = db.query(Asset).filter(Asset.id == asset_id).first()
+
+    if not asset:
+        raise HTTPException(
+            status_code=404,
+            detail="Asset not found"
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    asset.assigned_to = user.id
+    asset.status = "Assigned"
+
+    db.commit()
+    db.refresh(asset)
+
+    return asset

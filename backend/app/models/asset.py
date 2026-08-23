@@ -10,3 +10,4 @@ class Asset(Base):
     brand = Column(String, nullable=False)
     model = Column(String, nullable=False)
     status = Column(String, default="Available")
+    assigned_to = Column(Integer, nullable=True)

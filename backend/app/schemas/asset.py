@@ -17,6 +17,7 @@ class AssetUpdate(BaseModel):
 class AssetResponse(AssetCreate):
     id: int
     status: str
+    assigned_to: int | None = None
 
     class Config:
         from_attributes = True
