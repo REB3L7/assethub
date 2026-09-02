@@ -1,3 +1,5 @@
+from enum import Enum
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -5,6 +7,16 @@ from app.database.database import SessionLocal
 from app.models.asset import Asset
 from app.models.user import User
 from app.schemas.asset import AssetCreate, AssetResponse, AssetUpdate
+
+class AssetStatus(str, Enum):
+
+    AVAILABLE = "Available"
+
+    ASSIGNED = "Assigned"
+
+    MAINTENANCE = "Maintenance"
+
+    RETIRED = "Retired"
 
 router = APIRouter(
     prefix="/assets",
@@ -120,6 +132,7 @@ def assign_asset(
     db.refresh(asset)
 
     return asset
+
 @router.post("/{asset_id}/unassign", response_model=AssetResponse)
 def unassign_asset(
     asset_id: int,
@@ -135,6 +148,27 @@ def unassign_asset(
 
     asset.assigned_to = None
     asset.status = "Available"
+
+    db.commit()
+    db.refresh(asset)
+
+    return asset
+
+@router.patch("/{asset_id}/status", response_model=AssetResponse)
+def update_asset_status(
+    asset_id: int,
+    status: AssetStatus,
+    db: Session = Depends(get_db)
+):
+    asset = db.query(Asset).filter(Asset.id == asset_id).first()
+
+    if not asset:
+        raise HTTPException(
+            status_code=404,
+            detail="Asset not found"
+        )
+
+    asset.status = status
 
     db.commit()
     db.refresh(asset)
