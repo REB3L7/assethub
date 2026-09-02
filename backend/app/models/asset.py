@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 from app.database.database import Base
 
 class Asset(Base):
@@ -10,4 +11,6 @@ class Asset(Base):
     brand = Column(String, nullable=False)
     model = Column(String, nullable=False)
     status = Column(String, default="Available")
-    assigned_to = Column(Integer, nullable=True)
+    assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    assigned_user = relationship("User", back_populates="assets")
