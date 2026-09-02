@@ -120,3 +120,23 @@ def assign_asset(
     db.refresh(asset)
 
     return asset
+@router.post("/{asset_id}/unassign", response_model=AssetResponse)
+def unassign_asset(
+    asset_id: int,
+    db: Session = Depends(get_db)
+):
+    asset = db.query(Asset).filter(Asset.id == asset_id).first()
+
+    if not asset:
+        raise HTTPException(
+            status_code=404,
+            detail="Asset not found"
+        )
+
+    asset.assigned_to = None
+    asset.status = "Available"
+
+    db.commit()
+    db.refresh(asset)
+
+    return asset
