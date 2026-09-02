@@ -125,6 +125,20 @@ def assign_asset(
             detail="User not found"
         )
 
+    if asset.status != AssetStatus.AVAILABLE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Asset cannot be assigned while its status is {asset.status}"
+        )
+
+    asset.assigned_to = user.id
+    asset.status = AssetStatus.ASSIGNED
+
+    db.commit()
+    db.refresh(asset)
+
+    return asset
+
     asset.assigned_to = user.id
     asset.status = "Assigned"
 
@@ -146,8 +160,14 @@ def unassign_asset(
             detail="Asset not found"
         )
 
+    if asset.status != AssetStatus.ASSIGNED:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Asset cannot be unassigned while its status is {asset.status}"
+        )
+
     asset.assigned_to = None
-    asset.status = "Available"
+    asset.status = AssetStatus.AVAILABLE
 
     db.commit()
     db.refresh(asset)
