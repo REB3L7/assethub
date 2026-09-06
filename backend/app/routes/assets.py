@@ -7,6 +7,7 @@ from app.database.database import SessionLocal
 from app.models.asset import Asset
 from app.models.user import User
 from app.schemas.asset import AssetCreate, AssetResponse, AssetUpdate
+from app.auth.dependencies import get_current_user, require_admin
 
 class AssetStatus(str, Enum):
 
@@ -33,7 +34,11 @@ def get_db():
 
 
 @router.post("/", response_model=AssetResponse)
-def create_asset(asset: AssetCreate, db: Session = Depends(get_db)):
+def create_asset(
+    asset: AssetCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
     new_asset = Asset(
         asset_tag=asset.asset_tag,
         asset_type=asset.asset_type,
@@ -48,7 +53,10 @@ def create_asset(asset: AssetCreate, db: Session = Depends(get_db)):
     return new_asset
 
 @router.get("/", response_model=list[AssetResponse])
-def get_assets(db: Session = Depends(get_db)):
+def get_assets(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     return db.query(Asset).all()
 
 @router.get("/{asset_id}", response_model=AssetResponse)
@@ -67,7 +75,8 @@ def get_asset(asset_id: int, db: Session = Depends(get_db)):
 def update_asset(
     asset_id: int,
     asset_data: AssetUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
     asset = db.query(Asset).filter(Asset.id == asset_id).first()
 
@@ -89,7 +98,11 @@ def update_asset(
     return asset
 
 @router.delete("/{asset_id}")
-def delete_asset(asset_id: int, db: Session = Depends(get_db)):
+def delete_asset(
+    asset_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
     asset = db.query(Asset).filter(Asset.id == asset_id).first()
 
     if not asset:
@@ -107,10 +120,10 @@ def delete_asset(asset_id: int, db: Session = Depends(get_db)):
 def assign_asset(
     asset_id: int,
     user_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
     asset = db.query(Asset).filter(Asset.id == asset_id).first()
-
     if not asset:
         raise HTTPException(
             status_code=404,
@@ -118,7 +131,6 @@ def assign_asset(
         )
 
     user = db.query(User).filter(User.id == user_id).first()
-
     if not user:
         raise HTTPException(
             status_code=404,
@@ -150,7 +162,8 @@ def assign_asset(
 @router.post("/{asset_id}/unassign", response_model=AssetResponse)
 def unassign_asset(
     asset_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
     asset = db.query(Asset).filter(Asset.id == asset_id).first()
 
@@ -178,7 +191,8 @@ def unassign_asset(
 def update_asset_status(
     asset_id: int,
     status: AssetStatus,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
     asset = db.query(Asset).filter(Asset.id == asset_id).first()
 

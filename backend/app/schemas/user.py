@@ -5,10 +5,14 @@ class UserCreate(BaseModel):
     name: str
     email: str
     department: str
+    password: str
 
 
-class UserResponse(UserCreate):
+class UserResponse(BaseModel):
     id: int
+    name: str
+    email: str
+    department: str
 
     class Config:
         from_attributes = True
