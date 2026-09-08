@@ -8,6 +8,7 @@ from app.models.asset import Asset
 from app.models.user import User
 from app.schemas.asset import AssetCreate, AssetResponse, AssetUpdate
 from app.auth.dependencies import get_current_user, require_admin
+from sqlalchemy.exc import IntegrityError
 
 class AssetStatus(str, Enum):
 
@@ -46,9 +47,16 @@ def create_asset(
         model=asset.model
     )
 
-    db.add(new_asset)
-    db.commit()
-    db.refresh(new_asset)
+    try:
+        db.add(new_asset)
+        db.commit()
+        db.refresh(new_asset)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="An asset with this asset tag already exists"
+        )
 
     return new_asset
 
@@ -60,7 +68,11 @@ def get_assets(
     return db.query(Asset).all()
 
 @router.get("/{asset_id}", response_model=AssetResponse)
-def get_asset(asset_id: int, db: Session = Depends(get_db)):
+def get_asset(
+    asset_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     asset = db.query(Asset).filter(Asset.id == asset_id).first()
 
     if not asset:
@@ -145,14 +157,6 @@ def assign_asset(
 
     asset.assigned_to = user.id
     asset.status = AssetStatus.ASSIGNED
-
-    db.commit()
-    db.refresh(asset)
-
-    return asset
-
-    asset.assigned_to = user.id
-    asset.status = "Assigned"
 
     db.commit()
     db.refresh(asset)

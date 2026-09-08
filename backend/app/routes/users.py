@@ -5,6 +5,7 @@ from app.database.database import SessionLocal
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse
 from app.auth.security import hash_password
+from app.auth.dependencies import get_current_user, require_admin
 
 router = APIRouter(
 
@@ -26,7 +27,11 @@ def get_db():
         db.close()
 
 @router.post("/", response_model=UserResponse)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
+def create_user(
+    user: UserCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
     existing_user = db.query(User).filter(User.email == user.email).first()
 
     if existing_user:
@@ -40,7 +45,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         email=user.email,
         department=user.department,
         password_hash=hash_password(user.password)
-)
+    )
 
     db.add(new_user)
     db.commit()
@@ -48,7 +53,10 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
     return new_user
 
-@router.get("/", response_model=list[UserResponse])
-def get_users(db: Session = Depends(get_db)):
 
+@router.get("/", response_model=list[UserResponse])
+def get_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
     return db.query(User).all()
