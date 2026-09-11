@@ -6,6 +6,15 @@ import "../App.css"
 function Dashboard() {
   const [assets, setAssets] = useState([])
   const [error, setError] = useState("")
+  const [showAddForm, setShowAddForm] = useState(false)
+
+  const [newAsset, setNewAsset] = useState({
+    asset_tag: "",
+    asset_type: "",
+    brand: "",
+    model: "",
+  })
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -45,6 +54,42 @@ function Dashboard() {
     navigate("/")
   }
 
+  const handleAddAsset = async (event) => {
+    event.preventDefault()
+    setError("")
+
+    const token = localStorage.getItem("token")
+
+    try {
+      const response = await api.post("/assets/", newAsset, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      setAssets((currentAssets) => [
+        ...currentAssets,
+        response.data,
+      ])
+
+      setNewAsset({
+        asset_tag: "",
+        asset_type: "",
+        brand: "",
+        model: "",
+      })
+
+      setShowAddForm(false)
+    } catch (err) {
+      console.error(err)
+
+      setError(
+        err.response?.data?.detail ||
+        "Could not create asset"
+      )
+    }
+  }
+
   const totalAssets = assets.length
 
   const availableAssets = assets.filter(
@@ -72,10 +117,121 @@ function Dashboard() {
       </aside>
 
       <main className="main-content">
-        <div className="page-header">
-          <h1>Dashboard</h1>
-          <p>Manage and monitor your organization’s assets.</p>
+        <div className="page-header dashboard-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p>Manage and monitor your organization’s assets.</p>
+          </div>
+
+          <button
+            className="add-asset-button"
+            onClick={() => setShowAddForm(true)}
+          >
+            + Add Asset
+          </button>
         </div>
+
+        {showAddForm && (
+          <div className="asset-form-container">
+            <div className="asset-form-header">
+              <h2>Add Asset</h2>
+
+              <button
+                className="close-button"
+                onClick={() => setShowAddForm(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleAddAsset} className="asset-form">
+              <div className="form-group">
+                <label>Asset Tag</label>
+
+                <input
+                  type="text"
+                  value={newAsset.asset_tag}
+                  onChange={(event) =>
+                    setNewAsset({
+                      ...newAsset,
+                      asset_tag: event.target.value,
+                    })
+                  }
+                  placeholder="LAP-002"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Asset Type</label>
+
+                <input
+                  type="text"
+                  value={newAsset.asset_type}
+                  onChange={(event) =>
+                    setNewAsset({
+                      ...newAsset,
+                      asset_type: event.target.value,
+                    })
+                  }
+                  placeholder="Laptop"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Brand</label>
+
+                <input
+                  type="text"
+                  value={newAsset.brand}
+                  onChange={(event) =>
+                    setNewAsset({
+                      ...newAsset,
+                      brand: event.target.value,
+                    })
+                  }
+                  placeholder="Apple"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Model</label>
+
+                <input
+                  type="text"
+                  value={newAsset.model}
+                  onChange={(event) =>
+                    setNewAsset({
+                      ...newAsset,
+                      model: event.target.value,
+                    })
+                  }
+                  placeholder="MacBook Air M2"
+                  required
+                />
+              </div>
+
+              <div className="asset-form-actions">
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={() => setShowAddForm(false)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="save-button"
+                >
+                  Create Asset
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         <div className="cards">
           <div className="card">
