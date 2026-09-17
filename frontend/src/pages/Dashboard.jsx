@@ -5,9 +5,12 @@ import "../App.css"
 
 function Dashboard() {
   const [assets, setAssets] = useState([])
+  const [users, setUsers] = useState([])
   const [error, setError] = useState("")
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingAsset, setEditingAsset] = useState(null)
+  const [assigningAsset, setAssigningAsset] = useState(null)
+  const [selectedUserId, setSelectedUserId] = useState("")
 
   const [newAsset, setNewAsset] = useState({
     asset_tag: "",
@@ -27,7 +30,7 @@ function Dashboard() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const fetchAssets = async () => {
+    const fetchData = async () => {
       const token = localStorage.getItem("token")
 
       if (!token) {
@@ -35,14 +38,18 @@ function Dashboard() {
         return
       }
 
-      try {
-        const response = await api.get("/assets/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
 
-        setAssets(response.data)
+      try {
+        const assetsResponse = await api.get("/assets/", config)
+        setAssets(assetsResponse.data)
+
+        const usersResponse = await api.get("/users/", config)
+        setUsers(usersResponse.data)
       } catch (err) {
         console.error(err)
 
@@ -50,12 +57,15 @@ function Dashboard() {
           localStorage.removeItem("token")
           navigate("/")
         } else {
-          setError("Could not load assets")
+          setError(
+            err.response?.data?.detail ||
+            "Could not load dashboard data"
+          )
         }
       }
     }
 
-    fetchAssets()
+    fetchData()
   }, [navigate])
 
   const handleLogout = () => {
@@ -100,6 +110,8 @@ function Dashboard() {
   }
 
   const handleEditClick = (asset) => {
+    setShowAddForm(false)
+    setAssigningAsset(null)
     setEditingAsset(asset)
 
     setEditAsset({
@@ -147,6 +159,96 @@ function Dashboard() {
     }
   }
 
+  const handleAssignClick = (asset) => {
+    setShowAddForm(false)
+    setEditingAsset(null)
+    setAssigningAsset(asset)
+
+    if (asset.assigned_to) {
+      setSelectedUserId(String(asset.assigned_to))
+    } else {
+      setSelectedUserId("")
+    }
+  }
+
+  const handleAssignAsset = async (event) => {
+    event.preventDefault()
+    setError("")
+
+    if (!selectedUserId) {
+      setError("Please select a user")
+      return
+    }
+
+    const token = localStorage.getItem("token")
+
+    try {
+      const response = await api.post(
+        `/assets/${assigningAsset.id}/assign/${selectedUserId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      setAssets((currentAssets) =>
+        currentAssets.map((asset) =>
+          asset.id === assigningAsset.id
+            ? response.data
+            : asset
+        )
+      )
+
+      setAssigningAsset(null)
+      setSelectedUserId("")
+    } catch (err) {
+      console.error(err)
+
+      setError(
+        err.response?.data?.detail ||
+        "Could not assign asset"
+      )
+    }
+  }
+
+  const handleUnassignAsset = async () => {
+    setError("")
+
+    const token = localStorage.getItem("token")
+
+    try {
+      const response = await api.post(
+        `/assets/${assigningAsset.id}/unassign`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      setAssets((currentAssets) =>
+        currentAssets.map((asset) =>
+          asset.id === assigningAsset.id
+            ? response.data
+            : asset
+        )
+      )
+
+      setAssigningAsset(null)
+      setSelectedUserId("")
+    } catch (err) {
+      console.error(err)
+
+      setError(
+        err.response?.data?.detail ||
+        "Could not unassign asset"
+      )
+    }
+  }
+
   const totalAssets = assets.length
 
   const availableAssets = assets.filter(
@@ -177,8 +279,6 @@ function Dashboard() {
 
       <main className="main-content">
 
-        {/* Page Header */}
-
         <div className="page-header dashboard-header">
           <div>
             <h1>Dashboard</h1>
@@ -191,6 +291,7 @@ function Dashboard() {
             className="add-asset-button"
             onClick={() => {
               setEditingAsset(null)
+              setAssigningAsset(null)
               setShowAddForm(true)
             }}
           >
@@ -198,11 +299,14 @@ function Dashboard() {
           </button>
         </div>
 
-        {/* Add Asset Form */}
+        {error && (
+          <p className="error">{error}</p>
+        )}
+
+        {/* ADD ASSET */}
 
         {showAddForm && (
           <div className="asset-form-container">
-
             <div className="asset-form-header">
               <h2>Add Asset</h2>
 
@@ -218,7 +322,6 @@ function Dashboard() {
               onSubmit={handleAddAsset}
               className="asset-form"
             >
-
               <div className="form-group">
                 <label>Asset Tag</label>
 
@@ -288,7 +391,6 @@ function Dashboard() {
               </div>
 
               <div className="asset-form-actions">
-
                 <button
                   type="button"
                   className="cancel-button"
@@ -303,17 +405,15 @@ function Dashboard() {
                 >
                   Create Asset
                 </button>
-
               </div>
             </form>
           </div>
         )}
 
-        {/* Edit Asset Form */}
+        {/* EDIT ASSET */}
 
         {editingAsset && (
           <div className="asset-form-container">
-
             <div className="asset-form-header">
               <h2>Edit Asset</h2>
 
@@ -329,7 +429,6 @@ function Dashboard() {
               onSubmit={handleEditAsset}
               className="asset-form"
             >
-
               <div className="form-group">
                 <label>Asset Tag</label>
 
@@ -409,15 +508,12 @@ function Dashboard() {
                   <option value="Available">
                     Available
                   </option>
-
                   <option value="Assigned">
                     Assigned
                   </option>
-
                   <option value="Maintenance">
                     Maintenance
                   </option>
-
                   <option value="Retired">
                     Retired
                   </option>
@@ -425,7 +521,6 @@ function Dashboard() {
               </div>
 
               <div className="asset-form-actions">
-
                 <button
                   type="button"
                   className="cancel-button"
@@ -440,16 +535,101 @@ function Dashboard() {
                 >
                   Save Changes
                 </button>
-
               </div>
             </form>
           </div>
         )}
 
-        {/* Overview Cards */}
+        {/* ASSIGN ASSET */}
+
+        {assigningAsset && (
+          <div className="asset-form-container">
+            <div className="asset-form-header">
+              <div>
+                <h2>Assign Asset</h2>
+                <p>
+                  {assigningAsset.asset_tag} —{" "}
+                  {assigningAsset.brand}{" "}
+                  {assigningAsset.model}
+                </p>
+              </div>
+
+              <button
+                className="close-button"
+                onClick={() => {
+                  setAssigningAsset(null)
+                  setSelectedUserId("")
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleAssignAsset}
+              className="asset-form"
+            >
+              <div className="form-group">
+                <label>Assign To</label>
+
+                <select
+                  value={selectedUserId}
+                  onChange={(event) =>
+                    setSelectedUserId(event.target.value)
+                  }
+                  required
+                >
+                  <option value="">
+                    Select a user
+                  </option>
+
+                  {users.map((user) => (
+                    <option
+                      key={user.id}
+                      value={user.id}
+                    >
+                      {user.name} — {user.department}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="asset-form-actions">
+                {assigningAsset.assigned_to && (
+                  <button
+                    type="button"
+                    className="unassign-button"
+                    onClick={handleUnassignAsset}
+                  >
+                    Unassign
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={() => {
+                    setAssigningAsset(null)
+                    setSelectedUserId("")
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="save-button"
+                >
+                  Assign Asset
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* OVERVIEW */}
 
         <div className="cards">
-
           <div className="card">
             <h3>Total Assets</h3>
             <p>{totalAssets}</p>
@@ -469,26 +649,17 @@ function Dashboard() {
             <h3>Maintenance</h3>
             <p>{maintenanceAssets}</p>
           </div>
-
         </div>
 
-        {/* Assets Table */}
+        {/* ASSETS TABLE */}
 
         <section className="table-section">
-
           <h2>Assets</h2>
-
-          {error && (
-            <p className="error">
-              {error}
-            </p>
-          )}
 
           {assets.length === 0 ? (
             <p>No assets found.</p>
           ) : (
             <table>
-
               <thead>
                 <tr>
                   <th>Asset Tag</th>
@@ -502,16 +673,11 @@ function Dashboard() {
               </thead>
 
               <tbody>
-
                 {assets.map((asset) => (
                   <tr key={asset.id}>
-
                     <td>{asset.asset_tag}</td>
-
                     <td>{asset.asset_type}</td>
-
                     <td>{asset.brand}</td>
-
                     <td>{asset.model}</td>
 
                     <td>
@@ -531,24 +697,33 @@ function Dashboard() {
                     </td>
 
                     <td>
-                      <button
-                        className="edit-button"
-                        onClick={() => {
-                          setShowAddForm(false)
-                          handleEditClick(asset)
-                        }}
-                      >
-                        Edit
-                      </button>
-                    </td>
+                      <div className="action-buttons">
+                        <button
+                          className="edit-button"
+                          onClick={() =>
+                            handleEditClick(asset)
+                          }
+                        >
+                          Edit
+                        </button>
 
+                        <button
+                          className="assign-button"
+                          onClick={() =>
+                            handleAssignClick(asset)
+                          }
+                        >
+                          {asset.assigned_to
+                            ? "Manage"
+                            : "Assign"}
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
-
               </tbody>
             </table>
           )}
-
         </section>
 
       </main>
