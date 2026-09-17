@@ -328,3 +328,29 @@ td {
     padding: 30px;
   }
 }
+.edit-button {
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #111827;
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-weight: 600;
+}
+
+.edit-button:hover {
+  background: #f3f4f6;
+}
+
+.asset-form select {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  font-size: 15px;
+  outline: none;
+}
+
+.asset-form select:focus {
+  border-color: #111827;
+}

@@ -7,12 +7,21 @@ function Dashboard() {
   const [assets, setAssets] = useState([])
   const [error, setError] = useState("")
   const [showAddForm, setShowAddForm] = useState(false)
+  const [editingAsset, setEditingAsset] = useState(null)
 
   const [newAsset, setNewAsset] = useState({
     asset_tag: "",
     asset_type: "",
     brand: "",
     model: "",
+  })
+
+  const [editAsset, setEditAsset] = useState({
+    asset_tag: "",
+    asset_type: "",
+    brand: "",
+    model: "",
+    status: "",
   })
 
   const navigate = useNavigate()
@@ -90,6 +99,54 @@ function Dashboard() {
     }
   }
 
+  const handleEditClick = (asset) => {
+    setEditingAsset(asset)
+
+    setEditAsset({
+      asset_tag: asset.asset_tag,
+      asset_type: asset.asset_type,
+      brand: asset.brand,
+      model: asset.model,
+      status: asset.status,
+    })
+  }
+
+  const handleEditAsset = async (event) => {
+    event.preventDefault()
+    setError("")
+
+    const token = localStorage.getItem("token")
+
+    try {
+      const response = await api.put(
+        `/assets/${editingAsset.id}`,
+        editAsset,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      setAssets((currentAssets) =>
+        currentAssets.map((asset) =>
+          asset.id === editingAsset.id
+            ? response.data
+            : asset
+        )
+      )
+
+      setEditingAsset(null)
+    } catch (err) {
+      console.error(err)
+
+      setError(
+        err.response?.data?.detail ||
+        "Could not update asset"
+      )
+    }
+  }
+
   const totalAssets = assets.length
 
   const availableAssets = assets.filter(
@@ -113,26 +170,39 @@ function Dashboard() {
         <p>Assets</p>
         <p>Users</p>
 
-        <button onClick={handleLogout}>Logout</button>
+        <button onClick={handleLogout}>
+          Logout
+        </button>
       </aside>
 
       <main className="main-content">
+
+        {/* Page Header */}
+
         <div className="page-header dashboard-header">
           <div>
             <h1>Dashboard</h1>
-            <p>Manage and monitor your organization’s assets.</p>
+            <p>
+              Manage and monitor your organization&apos;s assets.
+            </p>
           </div>
 
           <button
             className="add-asset-button"
-            onClick={() => setShowAddForm(true)}
+            onClick={() => {
+              setEditingAsset(null)
+              setShowAddForm(true)
+            }}
           >
             + Add Asset
           </button>
         </div>
 
+        {/* Add Asset Form */}
+
         {showAddForm && (
           <div className="asset-form-container">
+
             <div className="asset-form-header">
               <h2>Add Asset</h2>
 
@@ -144,7 +214,11 @@ function Dashboard() {
               </button>
             </div>
 
-            <form onSubmit={handleAddAsset} className="asset-form">
+            <form
+              onSubmit={handleAddAsset}
+              className="asset-form"
+            >
+
               <div className="form-group">
                 <label>Asset Tag</label>
 
@@ -214,6 +288,7 @@ function Dashboard() {
               </div>
 
               <div className="asset-form-actions">
+
                 <button
                   type="button"
                   className="cancel-button"
@@ -228,12 +303,153 @@ function Dashboard() {
                 >
                   Create Asset
                 </button>
+
               </div>
             </form>
           </div>
         )}
 
+        {/* Edit Asset Form */}
+
+        {editingAsset && (
+          <div className="asset-form-container">
+
+            <div className="asset-form-header">
+              <h2>Edit Asset</h2>
+
+              <button
+                className="close-button"
+                onClick={() => setEditingAsset(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleEditAsset}
+              className="asset-form"
+            >
+
+              <div className="form-group">
+                <label>Asset Tag</label>
+
+                <input
+                  type="text"
+                  value={editAsset.asset_tag}
+                  onChange={(event) =>
+                    setEditAsset({
+                      ...editAsset,
+                      asset_tag: event.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Asset Type</label>
+
+                <input
+                  type="text"
+                  value={editAsset.asset_type}
+                  onChange={(event) =>
+                    setEditAsset({
+                      ...editAsset,
+                      asset_type: event.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Brand</label>
+
+                <input
+                  type="text"
+                  value={editAsset.brand}
+                  onChange={(event) =>
+                    setEditAsset({
+                      ...editAsset,
+                      brand: event.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Model</label>
+
+                <input
+                  type="text"
+                  value={editAsset.model}
+                  onChange={(event) =>
+                    setEditAsset({
+                      ...editAsset,
+                      model: event.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Status</label>
+
+                <select
+                  value={editAsset.status}
+                  onChange={(event) =>
+                    setEditAsset({
+                      ...editAsset,
+                      status: event.target.value,
+                    })
+                  }
+                >
+                  <option value="Available">
+                    Available
+                  </option>
+
+                  <option value="Assigned">
+                    Assigned
+                  </option>
+
+                  <option value="Maintenance">
+                    Maintenance
+                  </option>
+
+                  <option value="Retired">
+                    Retired
+                  </option>
+                </select>
+              </div>
+
+              <div className="asset-form-actions">
+
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={() => setEditingAsset(null)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="save-button"
+                >
+                  Save Changes
+                </button>
+
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Overview Cards */}
+
         <div className="cards">
+
           <div className="card">
             <h3>Total Assets</h3>
             <p>{totalAssets}</p>
@@ -253,17 +469,26 @@ function Dashboard() {
             <h3>Maintenance</h3>
             <p>{maintenanceAssets}</p>
           </div>
+
         </div>
 
+        {/* Assets Table */}
+
         <section className="table-section">
+
           <h2>Assets</h2>
 
-          {error && <p className="error">{error}</p>}
+          {error && (
+            <p className="error">
+              {error}
+            </p>
+          )}
 
           {assets.length === 0 ? (
             <p>No assets found.</p>
           ) : (
             <table>
+
               <thead>
                 <tr>
                   <th>Asset Tag</th>
@@ -272,20 +497,28 @@ function Dashboard() {
                   <th>Model</th>
                   <th>Status</th>
                   <th>Assigned To</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
 
               <tbody>
+
                 {assets.map((asset) => (
                   <tr key={asset.id}>
+
                     <td>{asset.asset_tag}</td>
+
                     <td>{asset.asset_type}</td>
+
                     <td>{asset.brand}</td>
+
                     <td>{asset.model}</td>
 
                     <td>
                       <span
-                        className={`status status-${asset.status.toLowerCase()}`}
+                        className={
+                          `status status-${asset.status.toLowerCase()}`
+                        }
                       >
                         {asset.status}
                       </span>
@@ -296,12 +529,28 @@ function Dashboard() {
                         ? asset.assigned_user.name
                         : "Unassigned"}
                     </td>
+
+                    <td>
+                      <button
+                        className="edit-button"
+                        onClick={() => {
+                          setShowAddForm(false)
+                          handleEditClick(asset)
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </td>
+
                   </tr>
                 ))}
+
               </tbody>
             </table>
           )}
+
         </section>
+
       </main>
     </div>
   )
