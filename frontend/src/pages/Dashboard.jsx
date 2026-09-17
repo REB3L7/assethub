@@ -249,6 +249,50 @@ function Dashboard() {
     }
   }
 
+  const handleDeleteAsset = async (asset) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${asset.asset_tag}?`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setError("")
+
+    const token = localStorage.getItem("token")
+
+    try {
+      await api.delete(`/assets/${asset.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      setAssets((currentAssets) =>
+        currentAssets.filter(
+          (currentAsset) => currentAsset.id !== asset.id
+        )
+      )
+
+      if (editingAsset?.id === asset.id) {
+        setEditingAsset(null)
+      }
+
+      if (assigningAsset?.id === asset.id) {
+        setAssigningAsset(null)
+        setSelectedUserId("")
+      }
+    } catch (err) {
+      console.error(err)
+
+      setError(
+        err.response?.data?.detail ||
+        "Could not delete asset"
+      )
+    }
+  }
+
   const totalAssets = assets.length
 
   const availableAssets = assets.filter(
@@ -278,6 +322,8 @@ function Dashboard() {
       </aside>
 
       <main className="main-content">
+
+        {/* PAGE HEADER */}
 
         <div className="page-header dashboard-header">
           <div>
@@ -508,12 +554,15 @@ function Dashboard() {
                   <option value="Available">
                     Available
                   </option>
+
                   <option value="Assigned">
                     Assigned
                   </option>
+
                   <option value="Maintenance">
                     Maintenance
                   </option>
+
                   <option value="Retired">
                     Retired
                   </option>
@@ -540,7 +589,7 @@ function Dashboard() {
           </div>
         )}
 
-        {/* ASSIGN ASSET */}
+        {/* ASSIGN / UNASSIGN ASSET */}
 
         {assigningAsset && (
           <div className="asset-form-container">
@@ -595,6 +644,7 @@ function Dashboard() {
               </div>
 
               <div className="asset-form-actions">
+
                 {assigningAsset.assigned_to && (
                   <button
                     type="button"
@@ -627,7 +677,7 @@ function Dashboard() {
           </div>
         )}
 
-        {/* OVERVIEW */}
+        {/* OVERVIEW CARDS */}
 
         <div className="cards">
           <div className="card">
@@ -651,7 +701,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* ASSETS TABLE */}
+        {/* ASSET TABLE */}
 
         <section className="table-section">
           <h2>Assets</h2>
@@ -698,6 +748,7 @@ function Dashboard() {
 
                     <td>
                       <div className="action-buttons">
+
                         <button
                           className="edit-button"
                           onClick={() =>
@@ -717,6 +768,16 @@ function Dashboard() {
                             ? "Manage"
                             : "Assign"}
                         </button>
+
+                        <button
+                          className="delete-button"
+                          onClick={() =>
+                            handleDeleteAsset(asset)
+                          }
+                        >
+                          Delete
+                        </button>
+
                       </div>
                     </td>
                   </tr>
