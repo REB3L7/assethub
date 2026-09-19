@@ -396,3 +396,19 @@ td {
 .delete-button:hover {
   background: #fef2f2;
 }
+.sidebar-link {
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.sidebar-link:hover {
+  background: #1f2937;
+  color: white;
+}
+
+.active-sidebar-link {
+  background: #1f2937;
+  color: white !important;
+}

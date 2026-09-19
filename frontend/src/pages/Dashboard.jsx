@@ -312,9 +312,20 @@ function Dashboard() {
       <aside className="sidebar">
         <h2>AssetHub</h2>
 
-        <p>Dashboard</p>
-        <p>Assets</p>
-        <p>Users</p>
+<p className="sidebar-link active-sidebar-link">
+  Dashboard
+</p>
+
+<p className="sidebar-link">
+  Assets
+</p>
+
+<p
+  className="sidebar-link"
+  onClick={() => navigate("/users")}
+>
+  Users
+</p>
 
         <button onClick={handleLogout}>
           Logout
