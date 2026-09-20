@@ -108,17 +108,32 @@ def test_admin_can_get_single_asset():
 
     token = get_admin_token()
 
-    response = client.get(
-
-        "/assets/3",
-
+    create_response = client.post(
+        "/assets/",
+        json={
+            "asset_tag": "TEST-SINGLE-ASSET",
+            "asset_type": "Laptop",
+            "brand": "Dell",
+            "model": "Latitude 5550",
+        },
         headers={"Authorization": f"Bearer {token}"},
+    )
 
+    assert create_response.status_code == 200
+
+    asset_id = create_response.json()["id"]
+
+    response = client.get(
+        f"/assets/{asset_id}",
+        headers={"Authorization": f"Bearer {token}"},
     )
 
     assert response.status_code == 200
 
-    assert response.json()["id"] == 3
+    data = response.json()
+
+    assert data["id"] == asset_id
+    assert data["asset_tag"] == "TEST-SINGLE-ASSET"
 
 def test_get_nonexistent_asset_returns_404():
 
