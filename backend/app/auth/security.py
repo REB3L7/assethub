@@ -1,7 +1,12 @@
+import os
 from datetime import datetime, timedelta, timezone
 
+from dotenv import load_dotenv
 from jose import jwt
 from passlib.context import CryptContext
+
+
+load_dotenv()
 
 
 pwd_context = CryptContext(
@@ -10,9 +15,13 @@ pwd_context = CryptContext(
 )
 
 
-SECRET_KEY = "assethub-development-secret-key"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is not set")
 
 
 def hash_password(password: str) -> str:
