@@ -10,7 +10,7 @@ def test_login_success():
     response = client.post(
         "/auth/login",
         data={
-            "username": "testuser1@assethub.com",
+            "username": "user@test.assethub.com",
             "password": "TestPassword123",
         },
     )
@@ -23,7 +23,7 @@ def test_login_wrong_password():
     response = client.post(
         "/auth/login",
         data={
-            "username": "testuser1@assethub.com",
+            "username": "user@test.assethub.com",
             "password": "DefinitelyWrongPassword123!",
         },
     )
@@ -34,7 +34,7 @@ def test_user_cannot_create_asset():
     login_response = client.post(
         "/auth/login",
         data={
-            "username": "testuser1@assethub.com",
+            "username": "user@test.assethub.com",
             "password": "TestPassword123",
         },
     )
@@ -61,7 +61,7 @@ def test_admin_can_create_asset():
     login_response = client.post(
         "/auth/login",
         data={
-            "username": "olumoroti@usf.edu",
+            "username": "admin@test.assethub.com",
             "password": "AdminPassword123",
         },
     )

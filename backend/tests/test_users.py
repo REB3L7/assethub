@@ -7,10 +7,10 @@ from app.main import app
 client = TestClient(app)
 
 
-TEST_USER_EMAIL = "testuser1@assethub.com"
+TEST_USER_EMAIL = "user@test.assethub.com"
 TEST_USER_PASSWORD = "TestPassword123"
 
-ADMIN_EMAIL = "olumoroti@usf.edu"
+ADMIN_EMAIL = "admin@test.assethub.com"
 ADMIN_PASSWORD = "AdminPassword123"
 
 

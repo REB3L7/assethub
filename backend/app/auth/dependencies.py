@@ -4,19 +4,11 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from app.auth.security import SECRET_KEY, ALGORITHM
-from app.database.database import SessionLocal
+from app.database.database import get_db
 from app.models.user import User
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 def get_current_user(
@@ -30,12 +22,7 @@ def get_current_user(
     )
 
     try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
-        )
-
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
 
         if user_id is None:
@@ -55,6 +42,7 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
 
 def require_admin(current_user: User = Depends(get_current_user)):
     if current_user.role != "Admin":

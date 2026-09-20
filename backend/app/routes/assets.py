@@ -3,7 +3,7 @@ from enum import Enum
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.database.database import SessionLocal
+from app.database.database import get_db
 from app.models.asset import Asset
 from app.models.user import User
 from app.schemas.asset import AssetCreate, AssetResponse, AssetUpdate
@@ -24,15 +24,6 @@ router = APIRouter(
     prefix="/assets",
     tags=["Assets"]
 )
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 
 @router.post("/", response_model=AssetResponse)
 def create_asset(
