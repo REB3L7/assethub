@@ -12,6 +12,10 @@ function Dashboard() {
   const [assigningAsset, setAssigningAsset] = useState(null)
   const [selectedUserId, setSelectedUserId] = useState("")
 
+  // Search and filtering
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("All")
+
   const [newAsset, setNewAsset] = useState({
     asset_tag: "",
     asset_type: "",
@@ -293,6 +297,7 @@ function Dashboard() {
     }
   }
 
+  // Dashboard statistics
   const totalAssets = assets.length
 
   const availableAssets = assets.filter(
@@ -307,25 +312,44 @@ function Dashboard() {
     (asset) => asset.status === "Maintenance"
   ).length
 
+  // Search and status filtering
+  const filteredAssets = assets.filter((asset) => {
+    const search = searchTerm.toLowerCase().trim()
+
+    const matchesSearch =
+      search === "" ||
+      asset.asset_tag?.toLowerCase().includes(search) ||
+      asset.asset_type?.toLowerCase().includes(search) ||
+      asset.brand?.toLowerCase().includes(search) ||
+      asset.model?.toLowerCase().includes(search) ||
+      asset.assigned_user?.name?.toLowerCase().includes(search)
+
+    const matchesStatus =
+      statusFilter === "All" ||
+      asset.status === statusFilter
+
+    return matchesSearch && matchesStatus
+  })
+
   return (
     <div className="dashboard">
       <aside className="sidebar">
         <h2>AssetHub</h2>
 
-<p className="sidebar-link active-sidebar-link">
-  Dashboard
-</p>
+        <p className="sidebar-link active-sidebar-link">
+          Dashboard
+        </p>
 
-<p className="sidebar-link">
-  Assets
-</p>
+        <p className="sidebar-link">
+          Assets
+        </p>
 
-<p
-  className="sidebar-link"
-  onClick={() => navigate("/users")}
->
-  Users
-</p>
+        <p
+          className="sidebar-link"
+          onClick={() => navigate("/users")}
+        >
+          Users
+        </p>
 
         <button onClick={handleLogout}>
           Logout
@@ -562,21 +586,10 @@ function Dashboard() {
                     })
                   }
                 >
-                  <option value="Available">
-                    Available
-                  </option>
-
-                  <option value="Assigned">
-                    Assigned
-                  </option>
-
-                  <option value="Maintenance">
-                    Maintenance
-                  </option>
-
-                  <option value="Retired">
-                    Retired
-                  </option>
+                  <option value="Available">Available</option>
+                  <option value="Assigned">Assigned</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Retired">Retired</option>
                 </select>
               </div>
 
@@ -600,7 +613,7 @@ function Dashboard() {
           </div>
         )}
 
-        {/* ASSIGN / UNASSIGN ASSET */}
+        {/* ASSIGN / UNASSIGN */}
 
         {assigningAsset && (
           <div className="asset-form-container">
@@ -639,9 +652,7 @@ function Dashboard() {
                   }
                   required
                 >
-                  <option value="">
-                    Select a user
-                  </option>
+                  <option value="">Select a user</option>
 
                   {users.map((user) => (
                     <option
@@ -655,7 +666,6 @@ function Dashboard() {
               </div>
 
               <div className="asset-form-actions">
-
                 {assigningAsset.assigned_to && (
                   <button
                     type="button"
@@ -715,10 +725,56 @@ function Dashboard() {
         {/* ASSET TABLE */}
 
         <section className="table-section">
-          <h2>Assets</h2>
+          <div className="table-header">
+            <div>
+              <h2>Assets</h2>
+              <p className="asset-count">
+                Showing {filteredAssets.length} of {assets.length} assets
+              </p>
+            </div>
+
+            <div className="asset-filters">
+              <input
+                type="text"
+                className="asset-search"
+                placeholder="Search assets..."
+                value={searchTerm}
+                onChange={(event) =>
+                  setSearchTerm(event.target.value)
+                }
+              />
+
+              <select
+                className="status-filter"
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(event.target.value)
+                }
+              >
+                <option value="All">All Statuses</option>
+                <option value="Available">Available</option>
+                <option value="Assigned">Assigned</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Retired">Retired</option>
+              </select>
+            </div>
+          </div>
 
           {assets.length === 0 ? (
             <p>No assets found.</p>
+          ) : filteredAssets.length === 0 ? (
+            <div className="no-results">
+              <p>No assets match your search.</p>
+
+              <button
+                onClick={() => {
+                  setSearchTerm("")
+                  setStatusFilter("All")
+                }}
+              >
+                Clear filters
+              </button>
+            </div>
           ) : (
             <table>
               <thead>
@@ -734,7 +790,7 @@ function Dashboard() {
               </thead>
 
               <tbody>
-                {assets.map((asset) => (
+                {filteredAssets.map((asset) => (
                   <tr key={asset.id}>
                     <td>{asset.asset_tag}</td>
                     <td>{asset.asset_type}</td>
@@ -759,7 +815,6 @@ function Dashboard() {
 
                     <td>
                       <div className="action-buttons">
-
                         <button
                           className="edit-button"
                           onClick={() =>
@@ -788,7 +843,6 @@ function Dashboard() {
                         >
                           Delete
                         </button>
-
                       </div>
                     </td>
                   </tr>
@@ -797,7 +851,6 @@ function Dashboard() {
             </table>
           )}
         </section>
-
       </main>
     </div>
   )
