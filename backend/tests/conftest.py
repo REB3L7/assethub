@@ -1,15 +1,20 @@
+import os
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database.database import Base, get_db
 from app.main import app
-from app.auth.dependencies import get_db
 from app.auth.security import hash_password
+from app.models.asset import Asset
 from app.models.user import User
 
 
-TEST_DATABASE_URL = "postgresql://roti@localhost/assethub_test"
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql://roti@localhost/assethub_test",
+)
 
 test_engine = create_engine(TEST_DATABASE_URL)
 
