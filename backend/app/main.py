@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database.database import Base, engine
 from app.models.asset import Asset
 from app.models.user import User
 from app.routes.assets import router as assets_router
@@ -32,7 +31,6 @@ app.add_middleware(
 )
 
 
-Base.metadata.create_all(bind=engine)
 
 
 app.include_router(assets_router)

@@ -9,3 +9,5 @@ venv/
 
 # Environment variables
 .env
+# Local Docker environment
+.env.docker
