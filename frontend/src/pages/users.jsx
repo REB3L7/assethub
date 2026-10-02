@@ -100,7 +100,7 @@ function Users() {
   return (
     <div className="dashboard">
       <aside className="sidebar">
-        <h2>AssetHub</h2>
+        <h2>The Asset Hub</h2>
 
         <p
           onClick={() => navigate("/dashboard")}

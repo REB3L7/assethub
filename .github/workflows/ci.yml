@@ -1,4 +1,4 @@
-name: AssetHub CI
+name: The Asset Hub CI
 
 on:
   push:

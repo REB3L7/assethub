@@ -19,7 +19,7 @@ FRONTEND_URL = os.getenv(
 )
 
 
-app = FastAPI(title="AssetHub API")
+app = FastAPI(title="The Asset Hub API")
 
 
 app.add_middleware(
@@ -40,4 +40,4 @@ app.include_router(auth_router)
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to AssetHub!"}
+    return {"message": "Welcome to The Asset Hub!"}

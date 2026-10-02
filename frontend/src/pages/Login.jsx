@@ -44,7 +44,7 @@ function Login() {
           <div className="brand-logo">A</div>
 
           <div>
-            <h1>AssetHub</h1>
+            <h1>The Asset Hub</h1>
             <p>IT Asset Management Platform</p>
           </div>
         </div>
@@ -105,7 +105,7 @@ function Login() {
           </p>
 
           <div className="visual-stat">
-            <span>AssetHub</span>
+            <span>The Asset Hub</span>
             <strong>Simple. Secure. Organized.</strong>
           </div>
         </div>
